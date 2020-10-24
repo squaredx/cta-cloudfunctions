@@ -83,7 +83,7 @@ exports.fetchCaseStatistics = functions.https.onRequest(async (req, res) => {
         batch.commit();
     }
     else{
-        let totalRecords = newCases.length;
+        //let totalRecords = newCases.length;
         let index = 0;
 
         let batch;

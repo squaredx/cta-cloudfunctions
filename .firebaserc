@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "fir-practice-ac262"
+    "default": "fir-practice-ac262",
+    "prod": "cs372-cta"
   }
 }

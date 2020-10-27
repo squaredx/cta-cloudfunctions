@@ -11,7 +11,8 @@ const BASE_URL = 'https://dashboard.saskatchewan.ca';
 
 const db = admin.firestore();
 
-exports.fetchCaseStatistics = functions.https.onRequest(async (req, res) => {
+//functions.https.onRequest(async (req, res) =>
+exports.fetchCaseStatistics = functions.pubsub.schedule('every 1 hours from 13:00 to 15:00').onRun(async (context) => {
 
     var _jsonURL;
     var data;
@@ -110,7 +111,8 @@ exports.fetchCaseStatistics = functions.https.onRequest(async (req, res) => {
         }
     }
 
-    return res.send(newCases);
+    return 'success';
+    //return res.send(newCases);
 });
 
 

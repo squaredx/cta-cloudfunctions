@@ -11,8 +11,80 @@ const BASE_URL = 'https://dashboard.saskatchewan.ca';
 
 const db = admin.firestore();
 
-exports.fetchCaseStatistics = functions.https.onRequest(async (req, res) => {
+//functions.https.onRequest(async (req, res) =>
+exports.fetchCaseStatistics = functions.pubsub.schedule('every 1 hours from 13:00 to 15:00').onRun(async (context) => {
 
+    const newCases = await getNewCases();
+
+    getNewCases(newCases);
+
+    return 'success';
+    //return res.send(newCases);
+});
+
+exports.testFn = functions.https.onRequest(async (req, res) => {
+    const newCases = await getNewCases();
+
+    //console.log(newCases);
+    await getMaxCases(newCases);
+
+    generateMaxCases();
+    res.send('yes');
+});
+
+
+
+//TODO: some how display and error if -1 is returned (for our purposes)
+function getRegionID(region) {
+    let result;
+    switch (region) {
+        case "Far North West":
+            result = 0;
+            break;
+        case "Far North Central":
+            result = 1;
+            break;
+        case "Far North East":
+            result = 2;
+            break;
+        case "North West":
+            result = 3;
+            break;
+        case "North Central":
+            result = 4;
+            break;
+        case "North East":
+            result = 5;
+            break;
+        case "Saskatoon":
+            result = 6;
+            break;
+        case "Central West":
+            result = 7;
+            break;
+        case "Central East":
+            result = 8;
+            break;
+        case "Regina":
+            result = 9;
+            break;
+        case "South West":
+            result = 10;
+            break;
+        case "South Central":
+            result = 11;
+            break;
+        case "South East":
+            result = 12;
+            break;
+        default:
+            result = -1;
+            break;
+    }
+    return result;
+}
+
+async function getNewCases() {
     var _jsonURL;
     var data;
     
@@ -110,58 +182,68 @@ exports.fetchCaseStatistics = functions.https.onRequest(async (req, res) => {
         }
     }
 
-    return res.send(newCases);
-});
-
-
-
-//TODO: some how display and error if -1 is returned (for our purposes)
-function getRegionID(region) {
-    let result;
-    switch (region) {
-        case "Far North West":
-            result = 0;
-            break;
-        case "Far North Central":
-            result = 1;
-            break;
-        case "Far North East":
-            result = 2;
-            break;
-        case "North West":
-            result = 3;
-            break;
-        case "North Central":
-            result = 4;
-            break;
-        case "North East":
-            result = 5;
-            break;
-        case "Saskatoon":
-            result = 6;
-            break;
-        case "Central West":
-            result = 7;
-            break;
-        case "Central East":
-            result = 8;
-            break;
-        case "Regina":
-            result = 9;
-            break;
-        case "South West":
-            result = 10;
-            break;
-        case "South Central":
-            result = 11;
-            break;
-        case "South East":
-            result = 12;
-            break;
-        default:
-            result = -1;
-            break;
-    }
-    return result;
+    return newCases;
 }
 
+async function getMaxCases(newCases) {
+
+    //get new cases for today by region
+    let newData = new Array();
+
+    newCases.forEach((element) => {
+        newData[element.regionID] = element.newCases;
+    });
+
+    db.collection('max-cases').get().then((snapshot) => {
+        let currentData = new Array()
+        snapshot.forEach((doc) => {
+            currentData[parseInt(doc.id)] = doc.data();
+        });
+        console.log(currentData);
+
+
+        let regMax = 0;
+        let regToday = false;
+        for(var i = 0; i < 13; i ++){
+            
+            if(newData[i] > currentData[i].max) {
+                regMax = newData[i];
+                regToday = true;
+            }
+            else {
+                regMax = currentData[i].max;
+                regToday = false;
+            }
+
+            db.collection('max-cases').doc(i.toString()).set({
+                max: regMax,
+                today: regToday
+            });
+        }
+
+    });
+
+    //Get the current max values from firebase
+    //compare them to the new reports from today.
+    //filter out the ids who have new highs
+    //create a batch of updates
+    //set a bool of new high
+    //for those who did not have a new high, set bool to false.
+}
+
+
+function generateMaxCases() {
+    let batch = db.batch();
+
+    let template = {};
+
+    template.max = 0;
+    template.today = false;
+
+    for(var i = 0; i < 13; i ++) {
+        let docRef = db.collection('max-cases').doc(i.toString());
+        batch.set(docRef, template);
+    }
+
+    batch.commit(); 
+}

@@ -227,6 +227,8 @@ getMaxCases(newCases)
     Description: the function finds the maximum amount of active cases for each region whenever it is called
                  the new cases are passed to the function and then the function compares the new data to the 
                  previously submitted data.
+
+                 REQUIRES THE max-cases AND SUBSEQUENT 0-12 DOCUMENTS TO ALREADY EXIST!
 */
 function getMaxCases(newCases) {
     //check to see if there are new cases.

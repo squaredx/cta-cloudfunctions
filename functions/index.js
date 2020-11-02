@@ -30,14 +30,14 @@ exports.fetchCaseStatistics = functions.pubsub.schedule('every 1 hours from 13:0
     return 'success';
 });
 
-exports.testFn = functions.https.onRequest(async (req, res) => {
-    const newCases = await getNewCases();
-    //const newCases = JSON.parse(DUMMY_DATA);
-    getMaxCases(newCases);
+// exports.testFn = functions.https.onRequest(async (req, res) => {
+//     const newCases = await getNewCases();
+//     //const newCases = JSON.parse(DUMMY_DATA);
+//     getMaxCases(newCases);
 
     
-    res.send(newCases);
-});
+//     res.send(newCases);
+// });
 
 /*
 getRegionID(region)
